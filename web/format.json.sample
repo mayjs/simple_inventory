@@ -1,0 +1,24 @@
+[
+    {
+        "name": "name",
+        "hr_name": "Name",
+        "type": "text"
+    },
+    {
+        "name": "amount",
+        "hr_name": "Menge",
+        "type": "text"
+    },
+    {
+        "name": "date",
+        "hr_name": "Datum",
+        "type": "date",
+        "default": true
+    },
+    {
+        "name": "eaten",
+        "hr_name": "Verbraucht",
+        "type": "checkbox"
+    }
+
+]
