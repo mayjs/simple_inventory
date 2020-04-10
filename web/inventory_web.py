@@ -22,6 +22,9 @@ def mini_html(body):
 def get_url(*args):
     return web_root + "/".join(map(str, args))
 
+def load_json_from_fn(fn):
+    with open(fn) as f:
+        return json.load(f)
 
 @app.route('/')
 def hello_world():
@@ -30,13 +33,34 @@ def hello_world():
 
 @app.route('/<category>')
 def ls(category):
-    return f"Opened {data_root/category}"
+    with open(data_root / category / "format.json") as f:
+        format = json.load(f)
+    filter_field = next((f for f in format if f.get("overview_hidden", False)), None)
+    format = [f for f in format if not f.get("overview_hidden", False)]
+
+    cat_data_path = data_root / category / "data"
+    files = [x for x in cat_data_path.iterdir() if x.is_file() and x.suffix == ".json"]
+    entries = [load_json_from_fn(fn) for fn in files]
+    if filter_field is not None:
+        entries = [entry for entry in entries if not entry[filter_field["name"]]]
+    if any(field["name"] == "date" for field in format):
+        entries = sorted(entries, key=lambda x: x["date"], reverse=True)
+
+    table_rows = ["".join(f"<th>{field['hr_name']}</th>" for field in format)]
+    table_rows.extend(
+        "".join(f"<td>{entry[field['name']]}" for field in format)
+        for entry in entries
+    )
+    table_body = "\n".join(f"<tr>{tr}</tr>" for tr in table_rows)
+
+    return mini_html(f"<table>{table_body}</table>")
+
 
 @app.route('/<category>/<entryid>', methods=['GET', 'POST'])
 def edit_entry(category, entryid):
     with open(data_root / category / "format.json") as f:
         format = json.load(f)
-    json_path = data_root / category / (entryid+".json")
+    json_path = data_root / category / "data" / (entryid+".json")
     header = ""
     if request.method == 'POST':
         out = dict(request.form)

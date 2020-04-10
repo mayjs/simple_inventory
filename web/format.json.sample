@@ -18,7 +18,8 @@
     {
         "name": "eaten",
         "hr_name": "Verbraucht",
-        "type": "checkbox"
+        "type": "checkbox",
+        "overview_hidden": true
     }
 
 ]
