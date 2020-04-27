@@ -22,8 +22,7 @@ def mini_html(body):
                 .content {{
                     font-family: sans-serif;
                 }}
-                @media (pointer:none), (pointer:coarse) {{
-                }}
+                @media (pointer:fine) {{
                     .content {{
                         max-width: 50%;
                         margin: auto;
