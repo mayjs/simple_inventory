@@ -16,6 +16,9 @@ def mini_html(body):
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <style>
+                table {{
+                    margin: auto;
+                }}
                 .content {{
                     font-family: sans-serif;
                 }}
