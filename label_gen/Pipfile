@@ -9,6 +9,7 @@ verify_ssl = true
 python-language-server = "*"
 qrcode = {extras = ["pil"],version = "*"}
 tqdm = "*"
+Pillow = "*"
 
 [requires]
 python_version = "3.8"
