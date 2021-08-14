@@ -2,7 +2,7 @@ from datetime import date
 import json
 import os
 from pathlib import Path
-from flask import Flask, request
+from flask import Flask, request, url_for
 
 data_root = Path(os.environ.get("INVENTORY_WEB_DATA_DIR", "./data"))
 web_root = os.environ.get("INVENTORY_WEB_URL_ROOT", "/")
@@ -28,6 +28,10 @@ def mini_html(body):
                         margin: auto;
                     }}
                 }}
+                a {{
+                    color: black;
+                    text-decoration: none;
+                }}
             </style>
         </head>
         <body>
@@ -42,10 +46,12 @@ def get_url(*args):
 
 def load_json_from_fn(fn):
     with open(fn) as f:
-        return json.load(f)
+        data = json.load(f)
+        data["entry_id"] = Path(fn).stem
+        return data
 
 @app.route('/')
-def hello_world():
+def ls_categories():
     content = "\n".join(f"<li><a href='{get_url(dir.relative_to(data_root))}'>{dir.relative_to(data_root)}</a></li>" for dir in data_root.iterdir() if dir.is_dir())
     return mini_html(f"<ul>{content}</ul>")
 
@@ -66,7 +72,7 @@ def ls(category):
 
     table_rows = ["".join(f"<th>{field['hr_name']}</th>" for field in format)]
     table_rows.extend(
-        "".join(f"<td>{entry[field['name']]}" for field in format)
+        "".join(f"<td><a href=\"{url_for('edit_entry', category=category, entryid=entry['entry_id'])}\">{entry[field['name']]}</a></td>" for field in format)
         for entry in entries
     )
     table_body = "\n".join(f"<tr>{tr}</tr>" for tr in table_rows)
