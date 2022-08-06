@@ -63,6 +63,8 @@
               mv "$TEMP_DIR/pdf/latex_template.pdf" "$OUT_PATH"
             '';
           };
+
+          hydraJobs.label_gen_app = self.defaultPackage.${system};
         }
       );
 }
