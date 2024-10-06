@@ -1,6 +1,5 @@
 # This file is pretty general, and you can adapt it in your project replacing
 # only `name` and `description` below.
-
 {
   description = "Devshell for the labelgen code";
 
@@ -8,40 +7,46 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils, ... }:
-    flake-utils.lib.eachDefaultSystem 
-      (system:
-        let
-          pkgs = import nixpkgs { inherit system ; };
+  outputs = {
+    self,
+    nixpkgs,
+    flake-utils,
+    ...
+  }:
+    flake-utils.lib.eachDefaultSystem
+    (
+      system: let
+        pkgs = import nixpkgs {inherit system;};
+      in {
+        packages.default = self.packages.${system}.simple_inventory_labelgen;
+        packages.simple_inventory_labelgen = let
+          backend_data = pkgs.python3Packages.buildPythonApplication {
+            # Simple backend collection for the required base files
+            pname = "simple_inventory_labelgen_backend";
+            version = "0.1.0";
+            src = ./.;
+            propagatedBuildInputs = with pkgs.python3Packages; [
+              qrcode
+              tqdm
+              pillow
+              texWithPkgs
+            ];
+            format = "other";
+            dontBuild = true;
+            dontConfigure = true;
+            installPhase = ''
+              install -Dm 0755 $src/generate_labels.py $out/bin/generate_labels.py
+              install -Dm 0755 $src/generate_latex.py $out/bin/generate_latex.py
+              install -D $src/latex_template.tex $out/latex_template.tex
+            '';
+          };
+          texWithPkgs = pkgs.texlive.combine {inherit (pkgs.texlive) scheme-small textpos;};
+          fontPath = "${pkgs.liberation_ttf.outPath}/share/fonts/truetype/LiberationSans-Regular.ttf";
         in
-        {
-          defaultPackage = let backend_data = pkgs.python3Packages.buildPythonApplication rec {
-              # Simple backend collection for the required base files
-              pname = "simple_inventory_labelgen_backend";
-              version = "0.1.0";
-              src = ./.;
-              propagatedBuildInputs = with pkgs.python3Packages; [
-                qrcode
-                tqdm
-                pillow
-                texWithPkgs
-              ];
-              format = "other";
-              dontBuild = true;
-              dontConfigure = true;
-              installPhase = ''
-                install -Dm 0755 $src/generate_labels.py $out/bin/generate_labels.py
-                install -Dm 0755 $src/generate_latex.py $out/bin/generate_latex.py
-                install -D $src/latex_template.tex $out/latex_template.tex
-              '';
-            };
-            texWithPkgs  = (pkgs.texlive.combine { inherit (pkgs.texlive) scheme-small textpos; });
-            fontPath = "${pkgs.liberation_ttf.outPath}/share/fonts/truetype/LiberationSans-Regular.ttf";
-          in
           pkgs.writeShellApplication {
             # Small shell script package that does the required nix store replacements to generate some labels
-            name = "simple_inventory_sheet_gen";
-            runtimeInputs = [ backend_data texWithPkgs];
+            name = "simple_inventory_label_gen";
+            runtimeInputs = [backend_data texWithPkgs];
             text = ''
               if [ "$#" -lt 1 ]; then
                 echo "USAGE: $0 BASE_URL [OUT_FILE]" 1>&2
@@ -64,8 +69,8 @@
             '';
           };
 
-          hydraJobs.label_gen_app = self.defaultPackage.${system};
-        }
-      );
+        hydraJobs.label_gen_app = self.packages.${system}.simple_inventory_labelgen;
+        formatter = pkgs.alejandra;
+      }
+    );
 }
-
