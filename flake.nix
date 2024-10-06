@@ -24,7 +24,7 @@
             # Simple backend collection for the required base files
             pname = "simple_inventory_labelgen_backend";
             version = "0.1.0";
-            src = ./.;
+            src = ./label_gen;
             propagatedBuildInputs = with pkgs.python3Packages; [
               qrcode
               tqdm
