@@ -100,5 +100,78 @@
         hydraJobs.label_gen_app = self.packages.${system}.simple_inventory_labelgen;
         formatter = pkgs.alejandra;
       }
-    );
+    )
+    // {
+      nixosModules.simple_inventory_web = {
+        lib,
+        config,
+        pkgs,
+        ...
+      }: let
+        cfg = config.services.simple_inventory_web;
+      in {
+        options.services.simple_inventory_web = {
+          enable = lib.mkEnableOption "Simple inventory web interface";
+          listen = lib.mkOption {
+            type = lib.types.str;
+            default = "127.0.0.1:8080";
+          };
+          package = lib.mkPackageOption self.packages.${pkgs.system} "simple_inventory_web" {};
+          user = lib.mkOption {
+            type = lib.types.str;
+            default = "simple_inventory_web";
+            description = "User account under which Jellyfin runs.";
+          };
+          group = lib.mkOption {
+            type = lib.types.str;
+            default = "simple_inventory_web";
+            description = "Group under which jellyfin runs.";
+          };
+        };
+
+        config = lib.mkIf cfg.enable {
+          systemd.services.simple_inventory_web = {
+            description = "Simple inventory web interface";
+            after = ["network-online.target"];
+            wants = ["network-online.target"];
+            wantedBy = ["multiuser.target"];
+            serviceConfig = {
+              ExecStart = ''
+                ${cfg.package}/bin/simple_inventory_web.py --waitress_listen_on=${cfg.listen}
+              '';
+              Restart = "on-failure";
+
+              User = cfg.user;
+              Group = cfg.group;
+              DynamicUser = true;
+              StateDirectory = "simple_inventory_web";
+              WorkingDirectory = "%S/simple_inventory_web";
+
+              CapabilityBoundingSet = "";
+              LockPersonality = true;
+              MemoryDenyWriteExecute = true;
+              PrivateDevices = true;
+              PrivateUsers = true;
+              ProtectClock = true;
+              ProtectControlGroups = true;
+              ProtectHome = true;
+              ProtectHostname = true;
+              ProtectKernelLogs = true;
+              ProtectKernelModules = true;
+              ProtectKernelTunables = true;
+              RestrictAddressFamilies = ["AF_UNIX" "AF_INET" "AF_INET6"];
+              RestrictNamespaces = true;
+              RestrictRealtime = true;
+              SystemCallArchitectures = "native";
+              UMask = "0066";
+            };
+            environment = {
+              INVENTORY_WEB_DATA_DIR = "/var/lib/simple_inventory_web";
+            };
+          };
+        };
+      };
+
+      nixosModules.default = self.nixosModules.simple_inventory_web;
+    };
 }
