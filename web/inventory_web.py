@@ -1,8 +1,11 @@
+#!/usr/bin/env python
+
 from datetime import date
 import json
 import os
 from pathlib import Path
 from flask import Flask, request, url_for
+import argparse
 
 data_root = Path(os.environ.get("INVENTORY_WEB_DATA_DIR", "./data"))
 web_root = os.environ.get("INVENTORY_WEB_URL_ROOT", "/")
@@ -121,4 +124,12 @@ def edit_entry(category, entryid):
 
 
 if __name__ == '__main__':
-    app.run(debug=False, host="0.0.0.0")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--waitress_listen_on", required=False, help="Run a production server using waitress and listen on the specified address.")
+    args = parser.parse_args()
+    if args.waitress_listen_on:
+        import waitress
+        waitress.serve(app, listen=args.waitress_listen_on)
+    else:
+        # Run development server
+        app.run(debug=False, host="0.0.0.0")
