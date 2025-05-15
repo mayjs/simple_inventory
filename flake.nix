@@ -134,7 +134,7 @@
             description = "Simple inventory web interface";
             after = ["network-online.target"];
             wants = ["network-online.target"];
-            wantedBy = ["multiuser.target"];
+            wantedBy = ["multi-user.target"];
             serviceConfig = {
               ExecStart = ''
                 ${cfg.package}/bin/simple_inventory_web.py --waitress_listen_on=${cfg.listen}
