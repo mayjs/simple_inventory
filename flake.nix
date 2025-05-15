@@ -120,12 +120,12 @@
           user = lib.mkOption {
             type = lib.types.str;
             default = "simple_inventory_web";
-            description = "User account under which Jellyfin runs.";
+            description = "User account under which simple_inventory runs.";
           };
           group = lib.mkOption {
             type = lib.types.str;
             default = "simple_inventory_web";
-            description = "Group under which jellyfin runs.";
+            description = "Group under which simple_inventory runs.";
           };
         };
 
